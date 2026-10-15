@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jogo da Memória - Transformando Resultados em Ações Pedagógicas</title>
+  <style>
+    :root {
+      --bg-color: #f4f8fb;
+      --card-back-bg: #2980b9;
+      --card-front-bg: #ffffff;
+      --border-color: #1a1a1a;
+      --primary-yellow: #f1c40f;
+      --primary-red: #e74c3c;
+      --primary-green: #2ecc71;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Comic Sans MS', 'Chalkboard SE', Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .title-banner {
+      background: var(--primary-yellow);
+      border: 4px solid var(--border-color);
+      padding: 15px 30px;
+      border-radius: 16px;
+      box-shadow: 5px 5px 0px var(--border-color);
+      margin-bottom: 15px;
+    }
+
+    .title-banner h1 {
+      font-size: 1.8rem;
+      color: #1a1a1a;
+      text-transform: uppercase;
+    }
+
+    .controls {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      margin-bottom: 25px;
+    }
+
+    .btn-reset {
+      background: var(--primary-red);
+      color: white;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border: 3px solid var(--border-color);
+      padding: 10px 25px;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 4px 4px 0px var(--border-color);
+      transition: all 0.1s;
+    }
+
+    .btn-reset:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0px var(--border-color);
+    }
+
+    .score {
+      font-size: 1.2rem;
+      font-weight: bold;
+      background: white;
+      border: 3px solid var(--border-color);
+      padding: 8px 20px;
+      border-radius: 12px;
+      box-shadow: 4px 4px 0px var(--border-color);
+    }
+
+    /* Tabuleiro */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      max-width: 950px;
+      width: 100%;
+    }
+
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    /* Cartas */
+    .card {
+      height: 180px;
+      perspective: 1000px;
+      cursor: pointer;
+    }
+
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      transition: transform 0.5s;
+      transform-style: preserve-3d;
+      border-radius: 14px;
+    }
+
+    .card.flipped .card-inner,
+    .card.matched .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border: 3px solid var(--border-color);
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      box-shadow: 4px 4px 0px var(--border-color);
+    }
+
+    /* Capa da Carta */
+    .card-front {
+      background-color: var(--card-back-bg);
+      color: white;
+    }
+
+    .card-front-box {
+      border: 2px dashed rgba(255, 255, 255, 0.8);
+      border-radius: 10px;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    .card-front h3 {
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      line-height: 1.3;
+      text-shadow: 1px 1px 0px #000;
+    }
+
+    /* Conteúdo da Carta */
+    .card-back {
+      background-color: var(--card-front-bg);
+      color: #1a1a1a;
+      transform: rotateY(180deg);
+      justify-content: center;
+    }
+
+    .card-back.conceito {
+      background-color: #fff9db;
+    }
+
+    .card-back.situacao {
+      background-color: #e3fafc;
+    }
+
+    .card-tag {
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border: 2px solid var(--border-color);
+      border-radius: 6px;
+      margin-bottom: 8px;
+      background: #ffffff;
+    }
+
+    .card-text {
+      font-size: 0.85rem;
+      line-height: 1.3;
+      font-weight: bold;
+    }
+
+    .card.matched .card-back {
+      border-color: var(--primary-green);
+      box-shadow: 0 0 12px rgba(46, 204, 113, 0.8);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="title-banner">
+      <h1>Transformando Resultados em Ações Pedagógicas</h1>
+    </div>
+  </header>
+
+  <div class="controls">
+    <button class="btn-reset" onclick="initGame()">Reiniciar Jogo</button>
+    <div class="score">Pares: <span id="pairs-count">0</span> / 6</div>
+  </div>
+
+  <div class="grid" id="game-grid"></div>
+
+  <script>
+    const cards = [
+      // Par 1
+      { pairId: 1, tag: 'CONCEITO', text: 'EVIDÊNCIA', type: 'conceito' },
+      { pairId: 1, tag: 'SITUAÇÃO', text: 'Nas produções analisadas, observa-se dificuldade recorrente na organização das ideias e na sequência do texto.', type: 'situacao' },
+
+      // Par 2
+      { pairId: 2, tag: 'CONCEITO', text: 'HABILIDADE PRIORITÁRIA', type: 'conceito' },
+      { pairId: 2, tag: 'SITUAÇÃO', text: 'Organizar o texto, mantendo uma sequência coerente de ideias.', type: 'situacao' },
+
+      // Par 3
+      { pairId: 3, tag: 'CONCEITO', text: 'OBJETIVO', type: 'conceito' },
+      { pairId: 3, tag: 'SITUAÇÃO', text: 'Ampliar a capacidade dos estudantes de organizar e articular as ideias em suas produções escritas.', type: 'situacao' },
+
+      // Par 4
+      { pairId: 4, tag: 'CONCEITO', text: 'AÇÃO PEDAGÓGICA', type: 'conceito' },
+      { pairId: 4, tag: 'SITUAÇÃO', text: 'Propor situações de produção, revisão e reescrita, com atenção à organização e à sequência das ideias.', type: 'situacao' },
+
+      // Par 5
+      { pairId: 5, tag: 'CONCEITO', text: 'ACOMPANHAMENTO', type: 'conceito' },
+      { pairId: 5, tag: 'SITUAÇÃO', text: 'Comparar produções realizadas em diferentes momentos e registrar os avanços e as dificuldades que permanecem.', type: 'situacao' },
+
+      // Par 6
+      { pairId: 6, tag: 'CONCEITO', text: 'REPLANEJAMENTO', type: 'conceito' },
+      { pairId: 6, tag: 'SITUAÇÃO', text: 'As produções seguintes ainda apresentam dificuldades recorrentes; equipe gestora e professor discutem ajustes nas estratégias utilizadas.', type: 'situacao' }
+    ];
+
+    let flipped = [];
+    let matchedCount = 0;
+    let lockBoard = false;
+
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    function initGame() {
+      const grid = document.getElementById('game-grid');
+      grid.innerHTML = '';
+      flipped = [];
+      matchedCount = 0;
+      lockBoard = false;
+      document.getElementById('pairs-count').textContent = '0';
+
+      const shuffledCards = shuffle([...cards]);
+
+      shuffledCards.forEach((item) => {
+        const cardElem = document.createElement('div');
+        cardElem.className = 'card';
+        cardElem.dataset.pair = item.pairId;
+
+        cardElem.innerHTML = `
+          <div class="card-inner">
+            <div class="card-face card-front">
+              <div class="card-front-box">
+                <h3>Transformando resultados em ações pedagógicas</h3>
+              </div>
+            </div>
+            <div class="card-face card-back ${item.type}">
+              <div class="card-tag">${item.tag}</div>
+              <div class="card-text">${item.text}</div>
+            </div>
+          </div>
+        `;
+
+        cardElem.addEventListener('click', () => onCardClick(cardElem));
+        grid.appendChild(cardElem);
+      });
+    }
+
+    function onCardClick(card) {
+      if (lockBoard || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+
+      card.classList.add('flipped');
+      flipped.push(card);
+
+      if (flipped.length === 2) {
+        checkMatch();
+      }
+    }
+
+    function checkMatch() {
+      lockBoard = true;
+      const [c1, c2] = flipped;
+
+      if (c1.dataset.pair === c2.dataset.pair) {
+        c1.classList.add('matched');
+        c2.classList.add('matched');
+        matchedCount++;
+        document.getElementById('pairs-count').textContent = matchedCount;
+        flipped = [];
+        lockBoard = false;
+
+        if (matchedCount === 6) {
+          setTimeout(() => alert('Parabéns! Você encontrou todos os pares do Plano de Intervenção! 🎯'), 400);
+        }
+      } else {
+        setTimeout(() => {
+          c1.classList.remove('flipped');
+          c2.classList.remove('flipped');
+          flipped = [];
+          lockBoard = false;
+        }, 1300);
+      }
+    }
+
+    initGame();
+  </script>
+</body>
+</html>
